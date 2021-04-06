@@ -17,10 +17,10 @@ def save_employee(details):
 #find sales per month
 def findsalespermonth():
     return Sales.objects.annotate(month=TruncMonth('date_of_sale')).values('month').annotate(total_sales=Sum('total_amount'))
+
 #find purchases per month
 def findpurchasespermonth():
     return Purchases.objects.annotate(month=TruncMonth('date_of_purchase')).values('month').annotate(total_purchases=Sum('total'))
-
 
 def findsalesoverpeiod(from_date, to_date):
     sales_as_of =  Sum('sales__quantity_sold', filter=Q(sales__date_of_sale__range=(from_date , to_date)),distinct=True)

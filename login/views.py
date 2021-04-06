@@ -6,7 +6,6 @@ from django.contrib import messages
 from django.http import HttpResponseRedirect
 
 
-
 def user_login(request):
     context = {}
     if request.method == "POST":
@@ -14,9 +13,9 @@ def user_login(request):
         password = request.POST['password']
         radio = request.POST['radio']
         user = authenticate(request, username=username, password=password)
-
+        print(username,password)
+        print(user)
         try:
-            user = authenticate(request, username=username, password=password)
             if (user is None):
                 # context['error'] = ""
                 messages.error(request, 'invalid credentials please try again')
@@ -50,10 +49,6 @@ def user_login(request):
                             request.session.set_expiry(86400)
                             login(request, user)
                             return HttpResponseRedirect(reverse('manager:index'))
-
-                # else:
-                #     context["error"] = "invalid credentials"
-                #     return render(request, "registration/login.html", context)
 
     else:
         return render(request, "registration/login.html", context)
