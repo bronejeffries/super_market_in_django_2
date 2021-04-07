@@ -11,44 +11,39 @@ def user_login(request):
     if request.method == "POST":
         username = request.POST['username']
         password = request.POST['password']
-        radio = request.POST['radio']
         user = authenticate(request, username=username, password=password)
-        print(username,password)
-        print(user)
+        
         try:
-            if (user is None):
-                # context['error'] = ""
+            if user is None:
                 messages.error(request, 'invalid credentials please try again')
-                # return HttpResponseRedirect(reverse('login:login'))
-                return render(request, "registration/login.html", { 'messages':messages})
-        except Exception:
-                context['error'] = "invalid credentials please try again"
-                # return HttpResponseRedirect(reverse('login:login'))
-                return render(request, "registration/login.html", {'context': context})
-        else:
-            try:
-                getgroupobject = Group.objects.get(name = radio)
-                group_1 = user.groups.get(id = getgroupobject.id)
-            except Exception:
-
-                messages.error(request, 'Choose the right button please...')
-                # return HttpResponseRedirect(reverse('login:login'))
-                return render(request, "registration/login.html", {'messages':messages})
+                return render(request, "registration/login.html", context)
             else:
-                if user:
-                    if getgroupobject.name == 'cashier':
-                        if user.is_active:
-                            request.session['username'] = username
-                            request.session.set_expiry(86400)
-                            login(request, user)
-                            return HttpResponseRedirect(reverse('cashier:index'))
-                    else:
-
-                        if user.is_active:
-                            request.session['username'] = username
-                            request.session.set_expiry(86400)
-                            login(request, user)
-                            return HttpResponseRedirect(reverse('manager:index'))
+                if user.is_active:
+                    redirect_url = None
+                    if user.groups.filter(name="cashier").count():
+                        #user is a cashier
+                        redirect_url = 'cashier:index'
+                        
+                    if user.groups.filter(name="manager").count():
+                        # user is a manager
+                        redirect_url = 'manager:index'
+                        
+                    if redirect_url is not None:
+                        request.session['username'] = username
+                        request.session.set_expiry(86400)
+                        login(request, user)
+                        return HttpResponseRedirect(reverse(redirect_url))
+                    
+                    messages.warning(request, "Unknown group, contact administrator")
+                    return render(request, "registration/login.html", context)
+                        
+                     
+                else:
+                    messages.warning(request, "Inactive account, contact administrator")
+                    return render(request, "registration/login.html", context)       
+        except Exception:
+            messages.warning(request, "Something wrong with your account, contact administrator")
+            return render(request, "registration/login.html", context)
 
     else:
         return render(request, "registration/login.html", context)
