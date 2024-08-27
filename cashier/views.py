@@ -13,23 +13,22 @@ from django.contrib.auth.decorators import login_required
 @login_required
 def index(request):
 
-    products = Products.objects.all()
+    products = Products.objects.iterator(chunk_size=100)
     username = request.session['username']
-    # return render(request, '')
     return render(request,'cashier/index.html',{ 'products' : products, 'username':username})
 
 @login_required
 def enter_reciept(request):
     username = request.session['username']
-    if request.method!='GET':
+    if request.method=='POST':
             prod = Products.objects.all()
             item_name = request.POST.getlist('item_name')
             item_cost_price =request.POST.getlist('item_cost_price')
             item_quantity =request.POST.getlist('item_quantity')
             today = str(date.today())
             req=request.POST
-            for i in range(len(item_name)):
-                st = item_name[i].strip()
+            for i,st in enumerate(item_name):
+                st = st.strip()
                 product = Products.objects.get(name = st)
                 product.available_quantity = int(product.available_quantity) + int(item_quantity[i])
                 product.save()
